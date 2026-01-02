@@ -14,11 +14,4 @@ threshold:
 exclude:
   # Main entry points and DI wiring
   paths:
-    - ^cmd/
-    - ^internal/container/
-    - ^internal/handlers/routes\.go$
-    # Infrastructure stores tested via integration tests
-    - ^internal/store/redis\.go$
-    - ^internal/store/postgres\.go$
-    - ^internal/store/redis_cache\.go$
-    - ^internal/analytics/store/postgres\.go$
+    - ^internal/flags/types.go$
