@@ -12,7 +12,7 @@ import (
 
 type FlagService interface {
 	Create(ctx context.Context, flag flags.Flag) (flags.Flag, error)
-	Evaluate(ctx context.Context, key string, evalCtx flags.EvalContext) (flags.EvalResult, error)
+	Evaluate(ctx context.Context, key flags.FlagKey, evalCtx flags.EvalContext) (flags.EvalResult, error)
 }
 
 type Handler struct {
@@ -44,7 +44,7 @@ func (h *Handler) CreateFlag(ctx context.Context, req *CreateFlagRequest) (*Crea
 func (h *Handler) EvaluateFlag(ctx context.Context, req *EvaluateFlagRequest) (*EvaluateFlagResponse, error) {
 	evalCtx := ToEvalContext(req.Body)
 
-	result, err := h.service.Evaluate(ctx, req.Key, evalCtx)
+	result, err := h.service.Evaluate(ctx, flags.FlagKey(req.Key), evalCtx)
 	if err != nil {
 		if errors.Is(err, flags.ErrFlagNotFound) {
 			return nil, huma.Error404NotFound("flag not found")

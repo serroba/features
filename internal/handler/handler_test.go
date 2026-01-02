@@ -45,7 +45,7 @@ func TestHandler_CreateFlag(t *testing.T) {
 	resp, err := h.CreateFlag(ctx, req)
 	require.NoError(t, err)
 
-	assert.Equal(t, "test-flag", resp.Body.Key)
+	assert.Equal(t, flags.FlagKey("test-flag"), resp.Body.Key)
 	assert.False(t, resp.Body.CreatedAt.IsZero())
 }
 
@@ -109,7 +109,7 @@ func TestHandler_EvaluateFlag(t *testing.T) {
 
 	boolVal := true
 	mockService.EXPECT().
-		Evaluate(gomock.Any(), "my-flag", gomock.Any()).
+		Evaluate(gomock.Any(), flags.FlagKey("my-flag"), gomock.Any()).
 		Return(flags.EvalResult{
 			FlagKey:     "my-flag",
 			Value:       flags.Value{Kind: flags.FlagBool, Bool: &boolVal},
@@ -128,7 +128,7 @@ func TestHandler_EvaluateFlag(t *testing.T) {
 	resp, err := h.EvaluateFlag(ctx, req)
 	require.NoError(t, err)
 
-	assert.Equal(t, "my-flag", resp.Body.FlagKey)
+	assert.Equal(t, flags.FlagKey("my-flag"), resp.Body.FlagKey)
 	assert.Equal(t, "default", resp.Body.Reason)
 	assert.Equal(t, "bool", resp.Body.Value.Kind)
 	assert.True(t, *resp.Body.Value.Bool)
@@ -143,7 +143,7 @@ func TestHandler_EvaluateFlag_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	mockService.EXPECT().
-		Evaluate(gomock.Any(), "nonexistent", gomock.Any()).
+		Evaluate(gomock.Any(), flags.FlagKey("nonexistent"), gomock.Any()).
 		Return(flags.EvalResult{}, flags.ErrFlagNotFound)
 
 	req := &handler.EvaluateFlagRequest{
@@ -166,7 +166,7 @@ func TestHandler_EvaluateFlag_RuleMatch(t *testing.T) {
 
 	boolVal := true
 	mockService.EXPECT().
-		Evaluate(gomock.Any(), "premium-feature", gomock.Any()).
+		Evaluate(gomock.Any(), flags.FlagKey("premium-feature"), gomock.Any()).
 		Return(flags.EvalResult{
 			FlagKey:     "premium-feature",
 			Value:       flags.Value{Kind: flags.FlagBool, Bool: &boolVal},
@@ -200,7 +200,7 @@ func TestHandler_EvaluateFlag_Disabled(t *testing.T) {
 
 	boolVal := false
 	mockService.EXPECT().
-		Evaluate(gomock.Any(), "disabled-flag", gomock.Any()).
+		Evaluate(gomock.Any(), flags.FlagKey("disabled-flag"), gomock.Any()).
 		Return(flags.EvalResult{
 			FlagKey:     "disabled-flag",
 			Value:       flags.Value{Kind: flags.FlagBool, Bool: &boolVal},
@@ -228,7 +228,7 @@ func TestHandler_EvaluateFlag_InternalError(t *testing.T) {
 	ctx := context.Background()
 
 	mockService.EXPECT().
-		Evaluate(gomock.Any(), "test-flag", gomock.Any()).
+		Evaluate(gomock.Any(), flags.FlagKey("test-flag"), gomock.Any()).
 		Return(flags.EvalResult{}, errors.New("database connection failed"))
 
 	req := &handler.EvaluateFlagRequest{

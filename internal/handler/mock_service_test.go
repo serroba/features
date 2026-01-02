@@ -57,7 +57,7 @@ func (mr *MockFlagServiceMockRecorder) Create(ctx, flag any) *gomock.Call {
 }
 
 // Evaluate mocks base method.
-func (m *MockFlagService) Evaluate(ctx context.Context, key string, evalCtx flags.EvalContext) (flags.EvalResult, error) {
+func (m *MockFlagService) Evaluate(ctx context.Context, key flags.FlagKey, evalCtx flags.EvalContext) (flags.EvalResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Evaluate", ctx, key, evalCtx)
 	ret0, _ := ret[0].(flags.EvalResult)

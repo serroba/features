@@ -11,6 +11,6 @@ var (
 )
 
 type Repository interface {
-	Get(ctx context.Context, key string) (Flag, error)
+	Get(ctx context.Context, key FlagKey) (Flag, error)
 	Create(ctx context.Context, flag Flag) error
 }
