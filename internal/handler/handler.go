@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"errors"
-	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/serroba/features/internal/flags"
@@ -15,24 +14,6 @@ type Handler struct {
 
 func New(service *flags.Service) *Handler {
 	return &Handler{service: service}
-}
-
-func (h *Handler) Register(api huma.API) {
-	huma.Register(api, huma.Operation{
-		OperationID: "create-flag",
-		Method:      http.MethodPost,
-		Path:        "/flags",
-		Summary:     "Create a new feature flag",
-		Tags:        []string{"Flags"},
-	}, h.CreateFlag)
-
-	huma.Register(api, huma.Operation{
-		OperationID: "evaluate-flag",
-		Method:      http.MethodPost,
-		Path:        "/flags/{key}/evaluate",
-		Summary:     "Evaluate a feature flag",
-		Tags:        []string{"Flags"},
-	}, h.EvaluateFlag)
 }
 
 func (h *Handler) CreateFlag(ctx context.Context, req *CreateFlagRequest) (*CreateFlagResponse, error) {

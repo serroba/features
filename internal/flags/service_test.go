@@ -365,11 +365,11 @@ func TestService_WithCustomMatcher(t *testing.T) {
 	t.Parallel()
 
 	repo := flags.NewMemoryRepository()
-	customMatcher := func(_ []flags.Rule, _ flags.EvalContext) *flags.Rule {
-		return &flags.Rule{
+	customMatcher := func(_ []flags.Rule, _ flags.EvalContext) (flags.Rule, bool) {
+		return flags.Rule{
 			ID:    "custom-rule",
 			Value: flags.StringValue("custom-value"),
-		}
+		}, true
 	}
 	svc := flags.NewServiceWithMatcher(repo, customMatcher)
 	ctx := context.Background()

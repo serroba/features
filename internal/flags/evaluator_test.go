@@ -26,11 +26,11 @@ func TestRuleMatcher_ReturnsFirstMatch(t *testing.T) {
 		},
 	}
 
-	result := matcher(rules, flags.EvalContext{
+	result, ok := matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"plan": "premium"},
 	})
 
-	require.NotNil(t, result)
+	require.True(t, ok)
 	assert.Equal(t, "rule-2", result.ID)
 }
 
@@ -46,11 +46,11 @@ func TestRuleMatcher_NoMatch(t *testing.T) {
 		},
 	}
 
-	result := matcher(rules, flags.EvalContext{
+	_, ok := matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"plan": "free"},
 	})
 
-	assert.Nil(t, result)
+	assert.False(t, ok)
 }
 
 func TestRuleMatcher_EmptyRules(t *testing.T) {
@@ -58,9 +58,9 @@ func TestRuleMatcher_EmptyRules(t *testing.T) {
 
 	matcher := flags.DefaultRuleMatcher()
 
-	result := matcher([]flags.Rule{}, flags.EvalContext{})
+	_, ok := matcher([]flags.Rule{}, flags.EvalContext{})
 
-	assert.Nil(t, result)
+	assert.False(t, ok)
 }
 
 func TestRuleMatcher_OpEquals(t *testing.T) {
@@ -75,15 +75,15 @@ func TestRuleMatcher_OpEquals(t *testing.T) {
 		},
 	}
 
-	result := matcher(rules, flags.EvalContext{
+	_, ok := matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"country": "US"},
 	})
-	require.NotNil(t, result)
+	require.True(t, ok)
 
-	result = matcher(rules, flags.EvalContext{
+	_, ok = matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"country": "UK"},
 	})
-	assert.Nil(t, result)
+	assert.False(t, ok)
 }
 
 func TestRuleMatcher_OpNotEquals(t *testing.T) {
@@ -98,15 +98,15 @@ func TestRuleMatcher_OpNotEquals(t *testing.T) {
 		},
 	}
 
-	result := matcher(rules, flags.EvalContext{
+	_, ok := matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"env": "staging"},
 	})
-	require.NotNil(t, result)
+	require.True(t, ok)
 
-	result = matcher(rules, flags.EvalContext{
+	_, ok = matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"env": "production"},
 	})
-	assert.Nil(t, result)
+	assert.False(t, ok)
 }
 
 func TestRuleMatcher_OpIn(t *testing.T) {
@@ -121,15 +121,15 @@ func TestRuleMatcher_OpIn(t *testing.T) {
 		},
 	}
 
-	result := matcher(rules, flags.EvalContext{
+	_, ok := matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"region": "us-east"},
 	})
-	require.NotNil(t, result)
+	require.True(t, ok)
 
-	result = matcher(rules, flags.EvalContext{
+	_, ok = matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"region": "eu-west"},
 	})
-	assert.Nil(t, result)
+	assert.False(t, ok)
 }
 
 func TestRuleMatcher_OpNotIn(t *testing.T) {
@@ -144,15 +144,15 @@ func TestRuleMatcher_OpNotIn(t *testing.T) {
 		},
 	}
 
-	result := matcher(rules, flags.EvalContext{
+	_, ok := matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"country": "US"},
 	})
-	require.NotNil(t, result)
+	require.True(t, ok)
 
-	result = matcher(rules, flags.EvalContext{
+	_, ok = matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"country": "CN"},
 	})
-	assert.Nil(t, result)
+	assert.False(t, ok)
 }
 
 func TestRuleMatcher_OpExists(t *testing.T) {
@@ -167,15 +167,15 @@ func TestRuleMatcher_OpExists(t *testing.T) {
 		},
 	}
 
-	result := matcher(rules, flags.EvalContext{
+	_, ok := matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"beta_enabled": true},
 	})
-	require.NotNil(t, result)
+	require.True(t, ok)
 
-	result = matcher(rules, flags.EvalContext{
+	_, ok = matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{},
 	})
-	assert.Nil(t, result)
+	assert.False(t, ok)
 }
 
 func TestRuleMatcher_OpStartsWith(t *testing.T) {
@@ -190,15 +190,15 @@ func TestRuleMatcher_OpStartsWith(t *testing.T) {
 		},
 	}
 
-	result := matcher(rules, flags.EvalContext{
+	_, ok := matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"email": "@internal.company.com"},
 	})
-	require.NotNil(t, result)
+	require.True(t, ok)
 
-	result = matcher(rules, flags.EvalContext{
+	_, ok = matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"email": "user@external.com"},
 	})
-	assert.Nil(t, result)
+	assert.False(t, ok)
 }
 
 func TestRuleMatcher_MultipleConditions_AllMustMatch(t *testing.T) {
@@ -217,20 +217,20 @@ func TestRuleMatcher_MultipleConditions_AllMustMatch(t *testing.T) {
 		},
 	}
 
-	result := matcher(rules, flags.EvalContext{
+	_, ok := matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"plan": "premium", "country": "US", "verified": true},
 	})
-	require.NotNil(t, result)
+	require.True(t, ok)
 
-	result = matcher(rules, flags.EvalContext{
+	_, ok = matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"plan": "premium", "country": "US"},
 	})
-	assert.Nil(t, result)
+	assert.False(t, ok)
 
-	result = matcher(rules, flags.EvalContext{
+	_, ok = matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"plan": "free", "country": "US", "verified": true},
 	})
-	assert.Nil(t, result)
+	assert.False(t, ok)
 }
 
 func TestRuleMatcher_BuiltInAttrs(t *testing.T) {
@@ -249,16 +249,16 @@ func TestRuleMatcher_BuiltInAttrs(t *testing.T) {
 		},
 	}
 
-	result := matcher(rules, flags.EvalContext{
+	result, ok := matcher(rules, flags.EvalContext{
 		UserID: "user-123",
 	})
-	require.NotNil(t, result)
+	require.True(t, ok)
 	assert.Equal(t, "user-rule", result.ID)
 
-	result = matcher(rules, flags.EvalContext{
+	result, ok = matcher(rules, flags.EvalContext{
 		TenantID: "tenant-456",
 	})
-	require.NotNil(t, result)
+	require.True(t, ok)
 	assert.Equal(t, "tenant-rule", result.ID)
 }
 
@@ -274,10 +274,10 @@ func TestRuleMatcher_UnknownOp(t *testing.T) {
 		},
 	}
 
-	result := matcher(rules, flags.EvalContext{
+	_, ok := matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"x": "y"},
 	})
-	assert.Nil(t, result)
+	assert.False(t, ok)
 }
 
 func TestRuleMatcher_NilAttrs(t *testing.T) {
@@ -292,10 +292,10 @@ func TestRuleMatcher_NilAttrs(t *testing.T) {
 		},
 	}
 
-	result := matcher(rules, flags.EvalContext{
+	_, ok := matcher(rules, flags.EvalContext{
 		Attrs: nil,
 	})
-	assert.Nil(t, result)
+	assert.False(t, ok)
 }
 
 func TestRuleMatcher_OpIn_InvalidListType(t *testing.T) {
@@ -310,10 +310,10 @@ func TestRuleMatcher_OpIn_InvalidListType(t *testing.T) {
 		},
 	}
 
-	result := matcher(rules, flags.EvalContext{
+	_, ok := matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"plan": "premium"},
 	})
-	assert.Nil(t, result)
+	assert.False(t, ok)
 }
 
 func TestRuleMatcher_OpNotIn_InvalidListType(t *testing.T) {
@@ -328,9 +328,9 @@ func TestRuleMatcher_OpNotIn_InvalidListType(t *testing.T) {
 		},
 	}
 
-	result := matcher(rules, flags.EvalContext{
+	result, ok := matcher(rules, flags.EvalContext{
 		Attrs: map[string]any{"plan": "premium"},
 	})
-	require.NotNil(t, result)
+	require.True(t, ok)
 	assert.Equal(t, "invalid-not-in", result.ID)
 }

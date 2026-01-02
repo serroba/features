@@ -15,3 +15,4 @@ exclude:
   # Main entry points and DI wiring
   paths:
     - ^cmd/server/main\.go$
+    - ^internal/handler/routes\.go

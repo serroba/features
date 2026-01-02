@@ -2,17 +2,17 @@ package flags
 
 import "strings"
 
-type RuleMatcher func(rules []Rule, evalCtx EvalContext) *Rule
+type RuleMatcher func(rules []Rule, evalCtx EvalContext) (Rule, bool)
 
 func DefaultRuleMatcher() RuleMatcher {
-	return func(rules []Rule, evalCtx EvalContext) *Rule {
-		for i := range rules {
-			if matchesRule(rules[i], evalCtx) {
-				return &rules[i]
+	return func(rules []Rule, evalCtx EvalContext) (Rule, bool) {
+		for _, rule := range rules {
+			if matchesRule(rule, evalCtx) {
+				return rule, true
 			}
 		}
 
-		return nil
+		return Rule{}, false
 	}
 }
 
