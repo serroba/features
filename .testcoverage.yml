@@ -14,3 +14,4 @@ threshold:
 exclude:
   # Main entry points and DI wiring
   paths:
+    - ^cmd/server/main\.go$
