@@ -1,6 +1,9 @@
 package flags
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 type FlagKey string
 
@@ -21,10 +24,49 @@ type Flag struct {
 	UpdatedAt    time.Time
 }
 
+func (f Flag) Evaluate(evalCtx EvalContext) EvalResult {
+	result := EvalResult{
+		FlagKey:     f.Key,
+		EvaluatedAt: time.Now(),
+	}
+
+	if !f.Enabled {
+		result.Value = f.DefaultValue
+		result.Reason = ReasonDisabled
+
+		return result
+	}
+
+	for _, rule := range f.Rules {
+		if rule.Matches(evalCtx) {
+			result.Value = rule.Value
+			result.Reason = ReasonRuleMatch
+			result.RuleID = rule.ID
+
+			return result
+		}
+	}
+
+	result.Value = f.DefaultValue
+	result.Reason = ReasonDefault
+
+	return result
+}
+
 type Rule struct {
 	ID         string
 	Conditions []Condition // AND across conditions
 	Value      Value
+}
+
+func (r Rule) Matches(evalCtx EvalContext) bool {
+	for _, cond := range r.Conditions {
+		if !cond.Matches(evalCtx) {
+			return false
+		}
+	}
+
+	return true
 }
 
 type ConditionOp string
@@ -42,6 +84,45 @@ type Condition struct {
 	Attr  string      // e.g. "tenant_id", "user_id", "plan", "country"
 	Op    ConditionOp // eq/in/exists/...
 	Value any         // string | float64 | bool | []any depending on Op
+}
+
+func (c Condition) Matches(evalCtx EvalContext) bool {
+	attrValue := evalCtx.GetAttr(c.Attr)
+
+	switch c.Op {
+	case OpEquals:
+		return attrValue == c.Value
+	case OpNotEquals:
+		return attrValue != c.Value
+	case OpIn:
+		return c.containsValue(attrValue)
+	case OpNotIn:
+		return !c.containsValue(attrValue)
+	case OpExists:
+		return attrValue != nil
+	case OpStartsWith:
+		str, ok := attrValue.(string)
+		prefix, prefixOk := c.Value.(string)
+
+		return ok && prefixOk && strings.HasPrefix(str, prefix)
+	default:
+		return false
+	}
+}
+
+func (c Condition) containsValue(attrValue any) bool {
+	slice, ok := c.Value.([]any)
+	if !ok {
+		return false
+	}
+
+	for _, item := range slice {
+		if attrValue == item {
+			return true
+		}
+	}
+
+	return false
 }
 
 type Value struct {
@@ -67,6 +148,21 @@ type EvalContext struct {
 	TenantID string
 	UserID   string
 	Attrs    map[string]any // arbitrary attributes for rule conditions
+}
+
+func (e EvalContext) GetAttr(attr string) any {
+	switch attr {
+	case "user_id":
+		return e.UserID
+	case "tenant_id":
+		return e.TenantID
+	default:
+		if e.Attrs != nil {
+			return e.Attrs[attr]
+		}
+
+		return nil
+	}
 }
 
 type EvalReason string
