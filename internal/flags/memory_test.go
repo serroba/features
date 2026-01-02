@@ -11,6 +11,8 @@ import (
 )
 
 func TestMemoryRepository_Create(t *testing.T) {
+	t.Parallel()
+
 	repo := flags.NewMemoryRepository()
 	ctx := context.Background()
 
@@ -28,6 +30,8 @@ func TestMemoryRepository_Create(t *testing.T) {
 }
 
 func TestMemoryRepository_Create_Duplicate(t *testing.T) {
+	t.Parallel()
+
 	repo := flags.NewMemoryRepository()
 	ctx := context.Background()
 
@@ -37,13 +41,15 @@ func TestMemoryRepository_Create_Duplicate(t *testing.T) {
 		Enabled: true,
 	}
 
-	_ = repo.Create(ctx, flag)
+	require.NoError(t, repo.Create(ctx, flag))
 	err := repo.Create(ctx, flag)
 
 	assert.ErrorIs(t, err, flags.ErrFlagExists)
 }
 
 func TestMemoryRepository_Get(t *testing.T) {
+	t.Parallel()
+
 	repo := flags.NewMemoryRepository()
 	ctx := context.Background()
 
@@ -55,7 +61,7 @@ func TestMemoryRepository_Get(t *testing.T) {
 		Version:      1,
 	}
 
-	_ = repo.Create(ctx, flag)
+	require.NoError(t, repo.Create(ctx, flag))
 
 	got, err := repo.Get(ctx, "test-flag")
 	require.NoError(t, err)
@@ -64,6 +70,8 @@ func TestMemoryRepository_Get(t *testing.T) {
 }
 
 func TestMemoryRepository_Get_NotFound(t *testing.T) {
+	t.Parallel()
+
 	repo := flags.NewMemoryRepository()
 	ctx := context.Background()
 

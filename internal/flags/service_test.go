@@ -10,6 +10,8 @@ import (
 )
 
 func TestService_Create(t *testing.T) {
+	t.Parallel()
+
 	repo := flags.NewMemoryRepository()
 	svc := flags.NewService(repo)
 	ctx := context.Background()
@@ -29,6 +31,8 @@ func TestService_Create(t *testing.T) {
 }
 
 func TestService_Create_Duplicate(t *testing.T) {
+	t.Parallel()
+
 	repo := flags.NewMemoryRepository()
 	svc := flags.NewService(repo)
 	ctx := context.Background()
@@ -39,13 +43,15 @@ func TestService_Create_Duplicate(t *testing.T) {
 		Enabled: true,
 	}
 
-	_ = svc.Create(ctx, flag)
+	require.NoError(t, svc.Create(ctx, flag))
 	err := svc.Create(ctx, flag)
 
 	assert.ErrorIs(t, err, flags.ErrFlagExists)
 }
 
 func TestService_Evaluate_ReturnsDefault(t *testing.T) {
+	t.Parallel()
+
 	repo := flags.NewMemoryRepository()
 	svc := flags.NewService(repo)
 	ctx := context.Background()
@@ -56,7 +62,7 @@ func TestService_Evaluate_ReturnsDefault(t *testing.T) {
 		Enabled:      true,
 		DefaultValue: flags.BoolValue(true),
 	}
-	_ = svc.Create(ctx, flag)
+	require.NoError(t, svc.Create(ctx, flag))
 
 	result, err := svc.Evaluate(ctx, "my-flag", flags.EvalContext{})
 	require.NoError(t, err)
@@ -68,6 +74,8 @@ func TestService_Evaluate_ReturnsDefault(t *testing.T) {
 }
 
 func TestService_Evaluate_DisabledFlag(t *testing.T) {
+	t.Parallel()
+
 	repo := flags.NewMemoryRepository()
 	svc := flags.NewService(repo)
 	ctx := context.Background()
@@ -78,7 +86,7 @@ func TestService_Evaluate_DisabledFlag(t *testing.T) {
 		Enabled:      false,
 		DefaultValue: flags.BoolValue(false),
 	}
-	_ = svc.Create(ctx, flag)
+	require.NoError(t, svc.Create(ctx, flag))
 
 	result, err := svc.Evaluate(ctx, "disabled-flag", flags.EvalContext{})
 	require.NoError(t, err)
@@ -88,6 +96,8 @@ func TestService_Evaluate_DisabledFlag(t *testing.T) {
 }
 
 func TestService_Evaluate_NotFound(t *testing.T) {
+	t.Parallel()
+
 	repo := flags.NewMemoryRepository()
 	svc := flags.NewService(repo)
 	ctx := context.Background()
@@ -98,6 +108,8 @@ func TestService_Evaluate_NotFound(t *testing.T) {
 }
 
 func TestService_Evaluate_RuleMatch_Equals(t *testing.T) {
+	t.Parallel()
+
 	repo := flags.NewMemoryRepository()
 	svc := flags.NewService(repo)
 	ctx := context.Background()
@@ -117,7 +129,7 @@ func TestService_Evaluate_RuleMatch_Equals(t *testing.T) {
 			},
 		},
 	}
-	_ = svc.Create(ctx, flag)
+	require.NoError(t, svc.Create(ctx, flag))
 
 	result, err := svc.Evaluate(ctx, "premium-feature", flags.EvalContext{
 		Attrs: map[string]any{"plan": "premium"},
@@ -130,6 +142,8 @@ func TestService_Evaluate_RuleMatch_Equals(t *testing.T) {
 }
 
 func TestService_Evaluate_RuleMatch_NoMatch(t *testing.T) {
+	t.Parallel()
+
 	repo := flags.NewMemoryRepository()
 	svc := flags.NewService(repo)
 	ctx := context.Background()
@@ -149,7 +163,7 @@ func TestService_Evaluate_RuleMatch_NoMatch(t *testing.T) {
 			},
 		},
 	}
-	_ = svc.Create(ctx, flag)
+	require.NoError(t, svc.Create(ctx, flag))
 
 	result, err := svc.Evaluate(ctx, "premium-feature", flags.EvalContext{
 		Attrs: map[string]any{"plan": "free"},
@@ -161,6 +175,8 @@ func TestService_Evaluate_RuleMatch_NoMatch(t *testing.T) {
 }
 
 func TestService_Evaluate_RuleMatch_In(t *testing.T) {
+	t.Parallel()
+
 	repo := flags.NewMemoryRepository()
 	svc := flags.NewService(repo)
 	ctx := context.Background()
@@ -180,7 +196,7 @@ func TestService_Evaluate_RuleMatch_In(t *testing.T) {
 			},
 		},
 	}
-	_ = svc.Create(ctx, flag)
+	require.NoError(t, svc.Create(ctx, flag))
 
 	result, err := svc.Evaluate(ctx, "beta-feature", flags.EvalContext{
 		TenantID: "tenant-2",
@@ -192,6 +208,8 @@ func TestService_Evaluate_RuleMatch_In(t *testing.T) {
 }
 
 func TestService_Evaluate_RuleMatch_MultipleConditions(t *testing.T) {
+	t.Parallel()
+
 	repo := flags.NewMemoryRepository()
 	svc := flags.NewService(repo)
 	ctx := context.Background()
@@ -212,7 +230,7 @@ func TestService_Evaluate_RuleMatch_MultipleConditions(t *testing.T) {
 			},
 		},
 	}
-	_ = svc.Create(ctx, flag)
+	require.NoError(t, svc.Create(ctx, flag))
 
 	result, err := svc.Evaluate(ctx, "geo-feature", flags.EvalContext{
 		Attrs: map[string]any{"plan": "premium", "country": "US"},
@@ -228,6 +246,8 @@ func TestService_Evaluate_RuleMatch_MultipleConditions(t *testing.T) {
 }
 
 func TestService_Evaluate_RuleMatch_FirstMatchWins(t *testing.T) {
+	t.Parallel()
+
 	repo := flags.NewMemoryRepository()
 	svc := flags.NewService(repo)
 	ctx := context.Background()
@@ -254,7 +274,7 @@ func TestService_Evaluate_RuleMatch_FirstMatchWins(t *testing.T) {
 			},
 		},
 	}
-	_ = svc.Create(ctx, flag)
+	require.NoError(t, svc.Create(ctx, flag))
 
 	result, err := svc.Evaluate(ctx, "tiered-feature", flags.EvalContext{
 		Attrs: map[string]any{"plan": "enterprise"},
@@ -266,6 +286,8 @@ func TestService_Evaluate_RuleMatch_FirstMatchWins(t *testing.T) {
 }
 
 func TestService_Evaluate_RuleMatch_StartsWith(t *testing.T) {
+	t.Parallel()
+
 	repo := flags.NewMemoryRepository()
 	svc := flags.NewService(repo)
 	ctx := context.Background()
@@ -285,7 +307,7 @@ func TestService_Evaluate_RuleMatch_StartsWith(t *testing.T) {
 			},
 		},
 	}
-	_ = svc.Create(ctx, flag)
+	require.NoError(t, svc.Create(ctx, flag))
 
 	result, err := svc.Evaluate(ctx, "internal-feature", flags.EvalContext{
 		Attrs: map[string]any{"email": "admin@company.com"},
@@ -301,6 +323,8 @@ func TestService_Evaluate_RuleMatch_StartsWith(t *testing.T) {
 }
 
 func TestService_Evaluate_StringValue(t *testing.T) {
+	t.Parallel()
+
 	repo := flags.NewMemoryRepository()
 	svc := flags.NewService(repo)
 	ctx := context.Background()
@@ -320,7 +344,7 @@ func TestService_Evaluate_StringValue(t *testing.T) {
 			},
 		},
 	}
-	_ = svc.Create(ctx, flag)
+	require.NoError(t, svc.Create(ctx, flag))
 
 	result, err := svc.Evaluate(ctx, "welcome-message", flags.EvalContext{
 		Attrs: map[string]any{"tier": "vip"},
@@ -339,6 +363,8 @@ func TestService_Evaluate_StringValue(t *testing.T) {
 }
 
 func TestService_Evaluate_NumberValue(t *testing.T) {
+	t.Parallel()
+
 	repo := flags.NewMemoryRepository()
 	svc := flags.NewService(repo)
 	ctx := context.Background()
@@ -365,7 +391,7 @@ func TestService_Evaluate_NumberValue(t *testing.T) {
 			},
 		},
 	}
-	_ = svc.Create(ctx, flag)
+	require.NoError(t, svc.Create(ctx, flag))
 
 	result, err := svc.Evaluate(ctx, "rate-limit", flags.EvalContext{
 		Attrs: map[string]any{"plan": "enterprise"},

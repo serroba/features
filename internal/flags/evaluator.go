@@ -2,25 +2,23 @@ package flags
 
 import "strings"
 
-type Evaluator struct{}
+type RuleMatcher func(rules []Rule, evalCtx EvalContext) *Rule
 
-func NewEvaluator() *Evaluator {
-	return &Evaluator{}
-}
-
-func (e *Evaluator) MatchingRule(rules []Rule, evalCtx EvalContext) *Rule {
-	for i := range rules {
-		if e.matchesRule(rules[i], evalCtx) {
-			return &rules[i]
+func DefaultRuleMatcher() RuleMatcher {
+	return func(rules []Rule, evalCtx EvalContext) *Rule {
+		for i := range rules {
+			if matchesRule(rules[i], evalCtx) {
+				return &rules[i]
+			}
 		}
-	}
 
-	return nil
+		return nil
+	}
 }
 
-func (e *Evaluator) matchesRule(rule Rule, evalCtx EvalContext) bool {
+func matchesRule(rule Rule, evalCtx EvalContext) bool {
 	for _, cond := range rule.Conditions {
-		if !e.matchesCondition(cond, evalCtx) {
+		if !matchesCondition(cond, evalCtx) {
 			return false
 		}
 	}
@@ -28,8 +26,8 @@ func (e *Evaluator) matchesRule(rule Rule, evalCtx EvalContext) bool {
 	return true
 }
 
-func (e *Evaluator) matchesCondition(cond Condition, evalCtx EvalContext) bool {
-	attrValue := e.getAttrValue(cond.Attr, evalCtx)
+func matchesCondition(cond Condition, evalCtx EvalContext) bool {
+	attrValue := getAttrValue(cond.Attr, evalCtx)
 
 	switch cond.Op {
 	case OpEquals:
@@ -37,9 +35,9 @@ func (e *Evaluator) matchesCondition(cond Condition, evalCtx EvalContext) bool {
 	case OpNotEquals:
 		return attrValue != cond.Value
 	case OpIn:
-		return e.valueIn(attrValue, cond.Value)
+		return valueIn(attrValue, cond.Value)
 	case OpNotIn:
-		return !e.valueIn(attrValue, cond.Value)
+		return !valueIn(attrValue, cond.Value)
 	case OpExists:
 		return attrValue != nil
 	case OpStartsWith:
@@ -52,7 +50,7 @@ func (e *Evaluator) matchesCondition(cond Condition, evalCtx EvalContext) bool {
 	}
 }
 
-func (e *Evaluator) getAttrValue(attr string, evalCtx EvalContext) any {
+func getAttrValue(attr string, evalCtx EvalContext) any {
 	switch attr {
 	case "user_id":
 		return evalCtx.UserID
@@ -67,7 +65,7 @@ func (e *Evaluator) getAttrValue(attr string, evalCtx EvalContext) any {
 	}
 }
 
-func (e *Evaluator) valueIn(value any, list any) bool {
+func valueIn(value any, list any) bool {
 	slice, ok := list.([]any)
 	if !ok {
 		return false

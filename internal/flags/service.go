@@ -6,14 +6,21 @@ import (
 )
 
 type Service struct {
-	repo      Repository
-	evaluator *Evaluator
+	repo        Repository
+	ruleMatcher RuleMatcher
 }
 
 func NewService(repo Repository) *Service {
 	return &Service{
-		repo:      repo,
-		evaluator: NewEvaluator(),
+		repo:        repo,
+		ruleMatcher: DefaultRuleMatcher(),
+	}
+}
+
+func NewServiceWithMatcher(repo Repository, matcher RuleMatcher) *Service {
+	return &Service{
+		repo:        repo,
+		ruleMatcher: matcher,
 	}
 }
 
@@ -46,7 +53,7 @@ func (s *Service) Evaluate(ctx context.Context, key string, evalCtx EvalContext)
 		return result, nil
 	}
 
-	if rule := s.evaluator.MatchingRule(flag.Rules, evalCtx); rule != nil {
+	if rule := s.ruleMatcher(flag.Rules, evalCtx); rule != nil {
 		result.Value = rule.Value
 		result.Reason = ReasonRuleMatch
 		result.RuleID = rule.ID
