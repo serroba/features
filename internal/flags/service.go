@@ -24,7 +24,7 @@ func NewServiceWithMatcher(repo Repository, matcher RuleMatcher) *Service {
 func (s *Service) Create(ctx context.Context, flag Flag) (Flag, error) {
 	flag.UpdatedAt = time.Now()
 
-	if err := s.repo.Create(ctx, &flag); err != nil {
+	if err := s.repo.Create(ctx, flag); err != nil {
 		return Flag{}, err
 	}
 

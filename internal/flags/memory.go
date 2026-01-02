@@ -7,28 +7,28 @@ import (
 
 type MemoryRepository struct {
 	mu    sync.RWMutex
-	flags map[string]*Flag
+	flags map[string]Flag
 }
 
 func NewMemoryRepository() *MemoryRepository {
 	return &MemoryRepository{
-		flags: make(map[string]*Flag),
+		flags: make(map[string]Flag),
 	}
 }
 
-func (r *MemoryRepository) Get(_ context.Context, key string) (*Flag, error) {
+func (r *MemoryRepository) Get(_ context.Context, key string) (Flag, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	flag, ok := r.flags[key]
 	if !ok {
-		return nil, ErrFlagNotFound
+		return Flag{}, ErrFlagNotFound
 	}
 
 	return flag, nil
 }
 
-func (r *MemoryRepository) Create(_ context.Context, flag *Flag) error {
+func (r *MemoryRepository) Create(_ context.Context, flag Flag) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 

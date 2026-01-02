@@ -16,7 +16,7 @@ func TestMemoryRepository_Create(t *testing.T) {
 	repo := flags.NewMemoryRepository()
 	ctx := context.Background()
 
-	flag := &flags.Flag{
+	flag := flags.Flag{
 		Key:          "test-flag",
 		Type:         flags.FlagBool,
 		Enabled:      true,
@@ -34,7 +34,7 @@ func TestMemoryRepository_Create_Duplicate(t *testing.T) {
 	repo := flags.NewMemoryRepository()
 	ctx := context.Background()
 
-	flag := &flags.Flag{
+	flag := flags.Flag{
 		Key:     "test-flag",
 		Type:    flags.FlagBool,
 		Enabled: true,
@@ -52,7 +52,7 @@ func TestMemoryRepository_Get(t *testing.T) {
 	repo := flags.NewMemoryRepository()
 	ctx := context.Background()
 
-	flag := &flags.Flag{
+	flag := flags.Flag{
 		Key:          "test-flag",
 		Type:         flags.FlagBool,
 		Enabled:      true,
