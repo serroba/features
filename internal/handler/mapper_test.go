@@ -111,3 +111,33 @@ func TestToEvalResultBody(t *testing.T) {
 	assert.Equal(t, int64(5), body.Version)
 	assert.Equal(t, now, body.EvaluatedAt)
 }
+
+func TestToFlag_EmptyConditions(t *testing.T) {
+	t.Parallel()
+
+	boolVal := true
+	body := handler.CreateFlagBody{
+		Key:     "test-flag",
+		Type:    "bool",
+		Enabled: true,
+		DefaultValue: handler.ValueBody{
+			Kind: "bool",
+			Bool: &boolVal,
+		},
+		Rules: []handler.RuleBody{
+			{
+				ID:         "rule-1",
+				Conditions: []handler.ConditionBody{},
+				Value: handler.ValueBody{
+					Kind: "bool",
+					Bool: &boolVal,
+				},
+			},
+		},
+	}
+
+	flag := handler.ToFlag(body)
+
+	assert.Len(t, flag.Rules, 1)
+	assert.Nil(t, flag.Rules[0].Conditions)
+}

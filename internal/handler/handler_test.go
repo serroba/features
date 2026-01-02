@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/serroba/features/internal/flags"
@@ -9,6 +10,18 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+type failingRepository struct {
+	err error
+}
+
+func (r *failingRepository) Get(_ context.Context, _ string) (*flags.Flag, error) {
+	return nil, r.err
+}
+
+func (r *failingRepository) Create(_ context.Context, _ *flags.Flag) error {
+	return r.err
+}
 
 func TestHandler_CreateFlag(t *testing.T) {
 	t.Parallel()
@@ -204,4 +217,43 @@ func TestHandler_EvaluateFlag_Disabled(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "disabled", resp.Body.Reason)
+}
+
+func TestHandler_CreateFlag_InternalError(t *testing.T) {
+	t.Parallel()
+
+	repo := &failingRepository{err: errors.New("database connection failed")}
+	svc := flags.NewService(repo)
+	h := handler.New(svc)
+	ctx := context.Background()
+
+	req := &handler.CreateFlagRequest{
+		Body: handler.CreateFlagBody{
+			Key:     "test-flag",
+			Type:    "bool",
+			Enabled: true,
+		},
+	}
+
+	_, err := h.CreateFlag(ctx, req)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to create flag")
+}
+
+func TestHandler_EvaluateFlag_InternalError(t *testing.T) {
+	t.Parallel()
+
+	repo := &failingRepository{err: errors.New("database connection failed")}
+	svc := flags.NewService(repo)
+	h := handler.New(svc)
+	ctx := context.Background()
+
+	req := &handler.EvaluateFlagRequest{
+		Key:  "test-flag",
+		Body: handler.EvaluateFlagBody{},
+	}
+
+	_, err := h.EvaluateFlag(ctx, req)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to evaluate flag")
 }

@@ -279,3 +279,58 @@ func TestRuleMatcher_UnknownOp(t *testing.T) {
 	})
 	assert.Nil(t, result)
 }
+
+func TestRuleMatcher_NilAttrs(t *testing.T) {
+	t.Parallel()
+
+	matcher := flags.DefaultRuleMatcher()
+
+	rules := []flags.Rule{
+		{
+			ID:         "custom-attr-rule",
+			Conditions: []flags.Condition{{Attr: "custom", Op: flags.OpEquals, Value: "value"}},
+		},
+	}
+
+	result := matcher(rules, flags.EvalContext{
+		Attrs: nil,
+	})
+	assert.Nil(t, result)
+}
+
+func TestRuleMatcher_OpIn_InvalidListType(t *testing.T) {
+	t.Parallel()
+
+	matcher := flags.DefaultRuleMatcher()
+
+	rules := []flags.Rule{
+		{
+			ID:         "invalid-in",
+			Conditions: []flags.Condition{{Attr: "plan", Op: flags.OpIn, Value: "not-a-slice"}},
+		},
+	}
+
+	result := matcher(rules, flags.EvalContext{
+		Attrs: map[string]any{"plan": "premium"},
+	})
+	assert.Nil(t, result)
+}
+
+func TestRuleMatcher_OpNotIn_InvalidListType(t *testing.T) {
+	t.Parallel()
+
+	matcher := flags.DefaultRuleMatcher()
+
+	rules := []flags.Rule{
+		{
+			ID:         "invalid-not-in",
+			Conditions: []flags.Condition{{Attr: "plan", Op: flags.OpNotIn, Value: "not-a-slice"}},
+		},
+	}
+
+	result := matcher(rules, flags.EvalContext{
+		Attrs: map[string]any{"plan": "premium"},
+	})
+	require.NotNil(t, result)
+	assert.Equal(t, "invalid-not-in", result.ID)
+}
