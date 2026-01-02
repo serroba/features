@@ -4,32 +4,30 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/serroba/features/internal/flags"
 	"github.com/serroba/features/internal/handler"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
-
-type failingRepository struct {
-	err error
-}
-
-func (r *failingRepository) Get(_ context.Context, _ string) (*flags.Flag, error) {
-	return nil, r.err
-}
-
-func (r *failingRepository) Create(_ context.Context, _ *flags.Flag) error {
-	return r.err
-}
 
 func TestHandler_CreateFlag(t *testing.T) {
 	t.Parallel()
 
-	repo := flags.NewMemoryRepository()
-	svc := flags.NewService(repo)
-	h := handler.New(svc)
+	ctrl := gomock.NewController(t)
+	mockService := NewMockFlagService(ctrl)
+	h := handler.New(mockService)
 	ctx := context.Background()
+
+	mockService.EXPECT().
+		Create(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(_ context.Context, flag *flags.Flag) error {
+			flag.UpdatedAt = time.Now()
+
+			return nil
+		})
 
 	boolVal := true
 	req := &handler.CreateFlagRequest{
@@ -54,10 +52,14 @@ func TestHandler_CreateFlag(t *testing.T) {
 func TestHandler_CreateFlag_Duplicate(t *testing.T) {
 	t.Parallel()
 
-	repo := flags.NewMemoryRepository()
-	svc := flags.NewService(repo)
-	h := handler.New(svc)
+	ctrl := gomock.NewController(t)
+	mockService := NewMockFlagService(ctrl)
+	h := handler.New(mockService)
 	ctx := context.Background()
+
+	mockService.EXPECT().
+		Create(gomock.Any(), gomock.Any()).
+		Return(flags.ErrFlagExists)
 
 	req := &handler.CreateFlagRequest{
 		Body: handler.CreateFlagBody{
@@ -68,163 +70,21 @@ func TestHandler_CreateFlag_Duplicate(t *testing.T) {
 	}
 
 	_, err := h.CreateFlag(ctx, req)
-	require.NoError(t, err)
-
-	_, err = h.CreateFlag(ctx, req)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "already exists")
-}
-
-func TestHandler_EvaluateFlag(t *testing.T) {
-	t.Parallel()
-
-	repo := flags.NewMemoryRepository()
-	svc := flags.NewService(repo)
-	h := handler.New(svc)
-	ctx := context.Background()
-
-	boolVal := true
-	createReq := &handler.CreateFlagRequest{
-		Body: handler.CreateFlagBody{
-			Key:     "my-flag",
-			Type:    "bool",
-			Enabled: true,
-			DefaultValue: handler.ValueBody{
-				Kind: "bool",
-				Bool: &boolVal,
-			},
-		},
-	}
-	_, err := h.CreateFlag(ctx, createReq)
-	require.NoError(t, err)
-
-	evalReq := &handler.EvaluateFlagRequest{
-		Key: "my-flag",
-		Body: handler.EvaluateFlagBody{
-			TenantID: "tenant-1",
-			UserID:   "user-1",
-		},
-	}
-
-	resp, err := h.EvaluateFlag(ctx, evalReq)
-	require.NoError(t, err)
-
-	assert.Equal(t, "my-flag", resp.Body.FlagKey)
-	assert.Equal(t, "default", resp.Body.Reason)
-	assert.Equal(t, "bool", resp.Body.Value.Kind)
-	assert.True(t, *resp.Body.Value.Bool)
-}
-
-func TestHandler_EvaluateFlag_NotFound(t *testing.T) {
-	t.Parallel()
-
-	repo := flags.NewMemoryRepository()
-	svc := flags.NewService(repo)
-	h := handler.New(svc)
-	ctx := context.Background()
-
-	req := &handler.EvaluateFlagRequest{
-		Key:  "nonexistent",
-		Body: handler.EvaluateFlagBody{},
-	}
-
-	_, err := h.EvaluateFlag(ctx, req)
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "not found")
-}
-
-func TestHandler_EvaluateFlag_WithRules(t *testing.T) {
-	t.Parallel()
-
-	repo := flags.NewMemoryRepository()
-	svc := flags.NewService(repo)
-	h := handler.New(svc)
-	ctx := context.Background()
-
-	boolFalse := false
-	boolTrue := true
-	createReq := &handler.CreateFlagRequest{
-		Body: handler.CreateFlagBody{
-			Key:     "premium-feature",
-			Type:    "bool",
-			Enabled: true,
-			DefaultValue: handler.ValueBody{
-				Kind: "bool",
-				Bool: &boolFalse,
-			},
-			Rules: []handler.RuleBody{
-				{
-					ID: "premium-users",
-					Conditions: []handler.ConditionBody{
-						{Attr: "plan", Op: "eq", Value: "premium"},
-					},
-					Value: handler.ValueBody{
-						Kind: "bool",
-						Bool: &boolTrue,
-					},
-				},
-			},
-		},
-	}
-	_, err := h.CreateFlag(ctx, createReq)
-	require.NoError(t, err)
-
-	evalReq := &handler.EvaluateFlagRequest{
-		Key: "premium-feature",
-		Body: handler.EvaluateFlagBody{
-			Attrs: map[string]any{"plan": "premium"},
-		},
-	}
-
-	resp, err := h.EvaluateFlag(ctx, evalReq)
-	require.NoError(t, err)
-
-	assert.Equal(t, "rule_match", resp.Body.Reason)
-	assert.Equal(t, "premium-users", resp.Body.RuleID)
-	assert.True(t, *resp.Body.Value.Bool)
-}
-
-func TestHandler_EvaluateFlag_Disabled(t *testing.T) {
-	t.Parallel()
-
-	repo := flags.NewMemoryRepository()
-	svc := flags.NewService(repo)
-	h := handler.New(svc)
-	ctx := context.Background()
-
-	boolVal := false
-	createReq := &handler.CreateFlagRequest{
-		Body: handler.CreateFlagBody{
-			Key:     "disabled-flag",
-			Type:    "bool",
-			Enabled: false,
-			DefaultValue: handler.ValueBody{
-				Kind: "bool",
-				Bool: &boolVal,
-			},
-		},
-	}
-	_, err := h.CreateFlag(ctx, createReq)
-	require.NoError(t, err)
-
-	evalReq := &handler.EvaluateFlagRequest{
-		Key:  "disabled-flag",
-		Body: handler.EvaluateFlagBody{},
-	}
-
-	resp, err := h.EvaluateFlag(ctx, evalReq)
-	require.NoError(t, err)
-
-	assert.Equal(t, "disabled", resp.Body.Reason)
 }
 
 func TestHandler_CreateFlag_InternalError(t *testing.T) {
 	t.Parallel()
 
-	repo := &failingRepository{err: errors.New("database connection failed")}
-	svc := flags.NewService(repo)
-	h := handler.New(svc)
+	ctrl := gomock.NewController(t)
+	mockService := NewMockFlagService(ctrl)
+	h := handler.New(mockService)
 	ctx := context.Background()
+
+	mockService.EXPECT().
+		Create(gomock.Any(), gomock.Any()).
+		Return(errors.New("database connection failed"))
 
 	req := &handler.CreateFlagRequest{
 		Body: handler.CreateFlagBody{
@@ -239,13 +99,137 @@ func TestHandler_CreateFlag_InternalError(t *testing.T) {
 	assert.Contains(t, err.Error(), "failed to create flag")
 }
 
+func TestHandler_EvaluateFlag(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	mockService := NewMockFlagService(ctrl)
+	h := handler.New(mockService)
+	ctx := context.Background()
+
+	boolVal := true
+	mockService.EXPECT().
+		Evaluate(gomock.Any(), "my-flag", gomock.Any()).
+		Return(&flags.EvalResult{
+			FlagKey:     "my-flag",
+			Value:       flags.Value{Kind: flags.FlagBool, Bool: &boolVal},
+			Reason:      flags.ReasonDefault,
+			EvaluatedAt: time.Now(),
+		}, nil)
+
+	req := &handler.EvaluateFlagRequest{
+		Key: "my-flag",
+		Body: handler.EvaluateFlagBody{
+			TenantID: "tenant-1",
+			UserID:   "user-1",
+		},
+	}
+
+	resp, err := h.EvaluateFlag(ctx, req)
+	require.NoError(t, err)
+
+	assert.Equal(t, "my-flag", resp.Body.FlagKey)
+	assert.Equal(t, "default", resp.Body.Reason)
+	assert.Equal(t, "bool", resp.Body.Value.Kind)
+	assert.True(t, *resp.Body.Value.Bool)
+}
+
+func TestHandler_EvaluateFlag_NotFound(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	mockService := NewMockFlagService(ctrl)
+	h := handler.New(mockService)
+	ctx := context.Background()
+
+	mockService.EXPECT().
+		Evaluate(gomock.Any(), "nonexistent", gomock.Any()).
+		Return(nil, flags.ErrFlagNotFound)
+
+	req := &handler.EvaluateFlagRequest{
+		Key:  "nonexistent",
+		Body: handler.EvaluateFlagBody{},
+	}
+
+	_, err := h.EvaluateFlag(ctx, req)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not found")
+}
+
+func TestHandler_EvaluateFlag_RuleMatch(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	mockService := NewMockFlagService(ctrl)
+	h := handler.New(mockService)
+	ctx := context.Background()
+
+	boolVal := true
+	mockService.EXPECT().
+		Evaluate(gomock.Any(), "premium-feature", gomock.Any()).
+		Return(&flags.EvalResult{
+			FlagKey:     "premium-feature",
+			Value:       flags.Value{Kind: flags.FlagBool, Bool: &boolVal},
+			Reason:      flags.ReasonRuleMatch,
+			RuleID:      "premium-users",
+			EvaluatedAt: time.Now(),
+		}, nil)
+
+	req := &handler.EvaluateFlagRequest{
+		Key: "premium-feature",
+		Body: handler.EvaluateFlagBody{
+			Attrs: map[string]any{"plan": "premium"},
+		},
+	}
+
+	resp, err := h.EvaluateFlag(ctx, req)
+	require.NoError(t, err)
+
+	assert.Equal(t, "rule_match", resp.Body.Reason)
+	assert.Equal(t, "premium-users", resp.Body.RuleID)
+	assert.True(t, *resp.Body.Value.Bool)
+}
+
+func TestHandler_EvaluateFlag_Disabled(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	mockService := NewMockFlagService(ctrl)
+	h := handler.New(mockService)
+	ctx := context.Background()
+
+	boolVal := false
+	mockService.EXPECT().
+		Evaluate(gomock.Any(), "disabled-flag", gomock.Any()).
+		Return(&flags.EvalResult{
+			FlagKey:     "disabled-flag",
+			Value:       flags.Value{Kind: flags.FlagBool, Bool: &boolVal},
+			Reason:      flags.ReasonDisabled,
+			EvaluatedAt: time.Now(),
+		}, nil)
+
+	req := &handler.EvaluateFlagRequest{
+		Key:  "disabled-flag",
+		Body: handler.EvaluateFlagBody{},
+	}
+
+	resp, err := h.EvaluateFlag(ctx, req)
+	require.NoError(t, err)
+
+	assert.Equal(t, "disabled", resp.Body.Reason)
+}
+
 func TestHandler_EvaluateFlag_InternalError(t *testing.T) {
 	t.Parallel()
 
-	repo := &failingRepository{err: errors.New("database connection failed")}
-	svc := flags.NewService(repo)
-	h := handler.New(svc)
+	ctrl := gomock.NewController(t)
+	mockService := NewMockFlagService(ctrl)
+	h := handler.New(mockService)
 	ctx := context.Background()
+
+	mockService.EXPECT().
+		Evaluate(gomock.Any(), "test-flag", gomock.Any()).
+		Return(nil, errors.New("database connection failed"))
 
 	req := &handler.EvaluateFlagRequest{
 		Key:  "test-flag",

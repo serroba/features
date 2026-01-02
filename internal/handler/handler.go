@@ -8,11 +8,18 @@ import (
 	"github.com/serroba/features/internal/flags"
 )
 
-type Handler struct {
-	service *flags.Service
+//go:generate mockgen -destination=mock_service_test.go -package=handler_test . FlagService
+
+type FlagService interface {
+	Create(ctx context.Context, flag *flags.Flag) error
+	Evaluate(ctx context.Context, key string, evalCtx flags.EvalContext) (*flags.EvalResult, error)
 }
 
-func New(service *flags.Service) *Handler {
+type Handler struct {
+	service FlagService
+}
+
+func New(service FlagService) *Handler {
 	return &Handler{service: service}
 }
 
