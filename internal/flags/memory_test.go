@@ -21,7 +21,6 @@ func TestMemoryRepository_Create(t *testing.T) {
 		Type:         flags.FlagBool,
 		Enabled:      true,
 		DefaultValue: flags.BoolValue(false),
-		Version:      1,
 		UpdatedAt:    time.Now(),
 	}
 
@@ -58,7 +57,6 @@ func TestMemoryRepository_Get(t *testing.T) {
 		Type:         flags.FlagBool,
 		Enabled:      true,
 		DefaultValue: flags.BoolValue(true),
-		Version:      1,
 	}
 
 	require.NoError(t, repo.Create(ctx, flag))

@@ -43,7 +43,6 @@ type CreateFlagResponse struct {
 
 type CreateFlagResponseBody struct {
 	Key       string    `json:"key"`
-	Version   int64     `json:"version"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
@@ -69,6 +68,5 @@ type EvalResultBody struct {
 	Value       ValueBody `json:"value"`
 	Reason      string    `json:"reason"`
 	RuleID      string    `json:"ruleId,omitempty"`
-	Version     int64     `json:"version"`
 	EvaluatedAt time.Time `json:"evaluatedAt"`
 }

@@ -27,10 +27,6 @@ func NewServiceWithMatcher(repo Repository, matcher RuleMatcher) *Service {
 func (s *Service) Create(ctx context.Context, flag *Flag) error {
 	flag.UpdatedAt = time.Now()
 
-	if flag.Version == 0 {
-		flag.Version = 1
-	}
-
 	return s.repo.Create(ctx, flag)
 }
 
@@ -42,7 +38,6 @@ func (s *Service) Evaluate(ctx context.Context, key string, evalCtx EvalContext)
 
 	result := &EvalResult{
 		FlagKey:     key,
-		Version:     flag.Version,
 		EvaluatedAt: time.Now(),
 	}
 

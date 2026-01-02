@@ -48,7 +48,6 @@ func TestHandler_CreateFlag(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "test-flag", resp.Body.Key)
-	assert.Equal(t, int64(1), resp.Body.Version)
 	assert.False(t, resp.Body.CreatedAt.IsZero())
 }
 
