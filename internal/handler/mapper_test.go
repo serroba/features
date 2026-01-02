@@ -89,7 +89,7 @@ func TestToEvalResultBody(t *testing.T) {
 
 	boolVal := true
 	now := time.Now()
-	result := &flags.EvalResult{
+	result := flags.EvalResult{
 		FlagKey: "my-flag",
 		Value: flags.Value{
 			Kind: flags.FlagBool,

@@ -8,18 +8,23 @@ import (
 	"github.com/serroba/features/internal/flags"
 )
 
-type Handler struct {
-	service *flags.Service
+//go:generate mockgen -destination=mock_service_test.go -package=handler_test . FlagService
+
+type FlagService interface {
+	Create(ctx context.Context, flag flags.Flag) (flags.Flag, error)
+	Evaluate(ctx context.Context, key string, evalCtx flags.EvalContext) (flags.EvalResult, error)
 }
 
-func New(service *flags.Service) *Handler {
+type Handler struct {
+	service FlagService
+}
+
+func New(service FlagService) *Handler {
 	return &Handler{service: service}
 }
 
 func (h *Handler) CreateFlag(ctx context.Context, req *CreateFlagRequest) (*CreateFlagResponse, error) {
-	flag := ToFlag(req.Body)
-
-	err := h.service.Create(ctx, flag)
+	flag, err := h.service.Create(ctx, ToFlag(req.Body))
 	if err != nil {
 		if errors.Is(err, flags.ErrFlagExists) {
 			return nil, huma.Error409Conflict("flag already exists")
