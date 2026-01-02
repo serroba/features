@@ -23,10 +23,10 @@ func TestHandler_CreateFlag(t *testing.T) {
 
 	mockService.EXPECT().
 		Create(gomock.Any(), gomock.Any()).
-		DoAndReturn(func(_ context.Context, flag *flags.Flag) error {
+		DoAndReturn(func(_ context.Context, flag flags.Flag) (flags.Flag, error) {
 			flag.UpdatedAt = time.Now()
 
-			return nil
+			return flag, nil
 		})
 
 	boolVal := true
@@ -59,7 +59,7 @@ func TestHandler_CreateFlag_Duplicate(t *testing.T) {
 
 	mockService.EXPECT().
 		Create(gomock.Any(), gomock.Any()).
-		Return(flags.ErrFlagExists)
+		Return(flags.Flag{}, flags.ErrFlagExists)
 
 	req := &handler.CreateFlagRequest{
 		Body: handler.CreateFlagBody{
@@ -84,7 +84,7 @@ func TestHandler_CreateFlag_InternalError(t *testing.T) {
 
 	mockService.EXPECT().
 		Create(gomock.Any(), gomock.Any()).
-		Return(errors.New("database connection failed"))
+		Return(flags.Flag{}, errors.New("database connection failed"))
 
 	req := &handler.CreateFlagRequest{
 		Body: handler.CreateFlagBody{
@@ -110,7 +110,7 @@ func TestHandler_EvaluateFlag(t *testing.T) {
 	boolVal := true
 	mockService.EXPECT().
 		Evaluate(gomock.Any(), "my-flag", gomock.Any()).
-		Return(&flags.EvalResult{
+		Return(flags.EvalResult{
 			FlagKey:     "my-flag",
 			Value:       flags.Value{Kind: flags.FlagBool, Bool: &boolVal},
 			Reason:      flags.ReasonDefault,
@@ -144,7 +144,7 @@ func TestHandler_EvaluateFlag_NotFound(t *testing.T) {
 
 	mockService.EXPECT().
 		Evaluate(gomock.Any(), "nonexistent", gomock.Any()).
-		Return(nil, flags.ErrFlagNotFound)
+		Return(flags.EvalResult{}, flags.ErrFlagNotFound)
 
 	req := &handler.EvaluateFlagRequest{
 		Key:  "nonexistent",
@@ -167,7 +167,7 @@ func TestHandler_EvaluateFlag_RuleMatch(t *testing.T) {
 	boolVal := true
 	mockService.EXPECT().
 		Evaluate(gomock.Any(), "premium-feature", gomock.Any()).
-		Return(&flags.EvalResult{
+		Return(flags.EvalResult{
 			FlagKey:     "premium-feature",
 			Value:       flags.Value{Kind: flags.FlagBool, Bool: &boolVal},
 			Reason:      flags.ReasonRuleMatch,
@@ -201,7 +201,7 @@ func TestHandler_EvaluateFlag_Disabled(t *testing.T) {
 	boolVal := false
 	mockService.EXPECT().
 		Evaluate(gomock.Any(), "disabled-flag", gomock.Any()).
-		Return(&flags.EvalResult{
+		Return(flags.EvalResult{
 			FlagKey:     "disabled-flag",
 			Value:       flags.Value{Kind: flags.FlagBool, Bool: &boolVal},
 			Reason:      flags.ReasonDisabled,
@@ -229,7 +229,7 @@ func TestHandler_EvaluateFlag_InternalError(t *testing.T) {
 
 	mockService.EXPECT().
 		Evaluate(gomock.Any(), "test-flag", gomock.Any()).
-		Return(nil, errors.New("database connection failed"))
+		Return(flags.EvalResult{}, errors.New("database connection failed"))
 
 	req := &handler.EvaluateFlagRequest{
 		Key:  "test-flag",

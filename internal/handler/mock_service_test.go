@@ -42,11 +42,12 @@ func (m *MockFlagService) EXPECT() *MockFlagServiceMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockFlagService) Create(ctx context.Context, flag *flags.Flag) error {
+func (m *MockFlagService) Create(ctx context.Context, flag flags.Flag) (flags.Flag, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, flag)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(flags.Flag)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Create indicates an expected call of Create.
@@ -56,10 +57,10 @@ func (mr *MockFlagServiceMockRecorder) Create(ctx, flag any) *gomock.Call {
 }
 
 // Evaluate mocks base method.
-func (m *MockFlagService) Evaluate(ctx context.Context, key string, evalCtx flags.EvalContext) (*flags.EvalResult, error) {
+func (m *MockFlagService) Evaluate(ctx context.Context, key string, evalCtx flags.EvalContext) (flags.EvalResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Evaluate", ctx, key, evalCtx)
-	ret0, _ := ret[0].(*flags.EvalResult)
+	ret0, _ := ret[0].(flags.EvalResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

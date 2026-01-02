@@ -4,16 +4,14 @@ import (
 	"github.com/serroba/features/internal/flags"
 )
 
-func ToFlag(body CreateFlagBody) *flags.Flag {
-	flag := &flags.Flag{
+func ToFlag(body CreateFlagBody) flags.Flag {
+	return flags.Flag{
 		Key:          body.Key,
 		Type:         flags.FlagType(body.Type),
 		Enabled:      body.Enabled,
 		DefaultValue: toValue(body.DefaultValue),
 		Rules:        toRules(body.Rules),
 	}
-
-	return flag
 }
 
 func toRules(bodies []RuleBody) []flags.Rule {
@@ -67,7 +65,7 @@ func ToEvalContext(body EvaluateFlagBody) flags.EvalContext {
 	}
 }
 
-func ToEvalResultBody(result *flags.EvalResult) EvalResultBody {
+func ToEvalResultBody(result flags.EvalResult) EvalResultBody {
 	return EvalResultBody{
 		FlagKey:     result.FlagKey,
 		Value:       toValueBody(result.Value),

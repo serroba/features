@@ -16,17 +16,18 @@ func TestService_Create(t *testing.T) {
 	svc := flags.NewService(repo)
 	ctx := context.Background()
 
-	flag := &flags.Flag{
+	input := flags.Flag{
 		Key:          "new-feature",
 		Type:         flags.FlagBool,
 		Enabled:      true,
 		DefaultValue: flags.BoolValue(false),
 	}
 
-	err := svc.Create(ctx, flag)
+	created, err := svc.Create(ctx, input)
 	require.NoError(t, err)
 
-	assert.False(t, flag.UpdatedAt.IsZero())
+	assert.Equal(t, "new-feature", created.Key)
+	assert.False(t, created.UpdatedAt.IsZero())
 }
 
 func TestService_Create_Duplicate(t *testing.T) {
@@ -36,15 +37,16 @@ func TestService_Create_Duplicate(t *testing.T) {
 	svc := flags.NewService(repo)
 	ctx := context.Background()
 
-	flag := &flags.Flag{
+	input := flags.Flag{
 		Key:     "new-feature",
 		Type:    flags.FlagBool,
 		Enabled: true,
 	}
 
-	require.NoError(t, svc.Create(ctx, flag))
-	err := svc.Create(ctx, flag)
+	_, err := svc.Create(ctx, input)
+	require.NoError(t, err)
 
+	_, err = svc.Create(ctx, input)
 	assert.ErrorIs(t, err, flags.ErrFlagExists)
 }
 
@@ -55,13 +57,14 @@ func TestService_Evaluate_ReturnsDefault(t *testing.T) {
 	svc := flags.NewService(repo)
 	ctx := context.Background()
 
-	flag := &flags.Flag{
+	flag := flags.Flag{
 		Key:          "my-flag",
 		Type:         flags.FlagBool,
 		Enabled:      true,
 		DefaultValue: flags.BoolValue(true),
 	}
-	require.NoError(t, svc.Create(ctx, flag))
+	_, err := svc.Create(ctx, flag)
+	require.NoError(t, err)
 
 	result, err := svc.Evaluate(ctx, "my-flag", flags.EvalContext{})
 	require.NoError(t, err)
@@ -79,13 +82,14 @@ func TestService_Evaluate_DisabledFlag(t *testing.T) {
 	svc := flags.NewService(repo)
 	ctx := context.Background()
 
-	flag := &flags.Flag{
+	flag := flags.Flag{
 		Key:          "disabled-flag",
 		Type:         flags.FlagBool,
 		Enabled:      false,
 		DefaultValue: flags.BoolValue(false),
 	}
-	require.NoError(t, svc.Create(ctx, flag))
+	_, err := svc.Create(ctx, flag)
+	require.NoError(t, err)
 
 	result, err := svc.Evaluate(ctx, "disabled-flag", flags.EvalContext{})
 	require.NoError(t, err)
@@ -113,7 +117,7 @@ func TestService_Evaluate_RuleMatch_Equals(t *testing.T) {
 	svc := flags.NewService(repo)
 	ctx := context.Background()
 
-	flag := &flags.Flag{
+	flag := flags.Flag{
 		Key:          "premium-feature",
 		Type:         flags.FlagBool,
 		Enabled:      true,
@@ -128,7 +132,8 @@ func TestService_Evaluate_RuleMatch_Equals(t *testing.T) {
 			},
 		},
 	}
-	require.NoError(t, svc.Create(ctx, flag))
+	_, err := svc.Create(ctx, flag)
+	require.NoError(t, err)
 
 	result, err := svc.Evaluate(ctx, "premium-feature", flags.EvalContext{
 		Attrs: map[string]any{"plan": "premium"},
@@ -147,7 +152,7 @@ func TestService_Evaluate_RuleMatch_NoMatch(t *testing.T) {
 	svc := flags.NewService(repo)
 	ctx := context.Background()
 
-	flag := &flags.Flag{
+	flag := flags.Flag{
 		Key:          "premium-feature",
 		Type:         flags.FlagBool,
 		Enabled:      true,
@@ -162,7 +167,8 @@ func TestService_Evaluate_RuleMatch_NoMatch(t *testing.T) {
 			},
 		},
 	}
-	require.NoError(t, svc.Create(ctx, flag))
+	_, err := svc.Create(ctx, flag)
+	require.NoError(t, err)
 
 	result, err := svc.Evaluate(ctx, "premium-feature", flags.EvalContext{
 		Attrs: map[string]any{"plan": "free"},
@@ -180,7 +186,7 @@ func TestService_Evaluate_RuleMatch_In(t *testing.T) {
 	svc := flags.NewService(repo)
 	ctx := context.Background()
 
-	flag := &flags.Flag{
+	flag := flags.Flag{
 		Key:          "beta-feature",
 		Type:         flags.FlagBool,
 		Enabled:      true,
@@ -195,7 +201,8 @@ func TestService_Evaluate_RuleMatch_In(t *testing.T) {
 			},
 		},
 	}
-	require.NoError(t, svc.Create(ctx, flag))
+	_, err := svc.Create(ctx, flag)
+	require.NoError(t, err)
 
 	result, err := svc.Evaluate(ctx, "beta-feature", flags.EvalContext{
 		TenantID: "tenant-2",
@@ -213,7 +220,7 @@ func TestService_Evaluate_RuleMatch_MultipleConditions(t *testing.T) {
 	svc := flags.NewService(repo)
 	ctx := context.Background()
 
-	flag := &flags.Flag{
+	flag := flags.Flag{
 		Key:          "geo-feature",
 		Type:         flags.FlagBool,
 		Enabled:      true,
@@ -229,7 +236,8 @@ func TestService_Evaluate_RuleMatch_MultipleConditions(t *testing.T) {
 			},
 		},
 	}
-	require.NoError(t, svc.Create(ctx, flag))
+	_, err := svc.Create(ctx, flag)
+	require.NoError(t, err)
 
 	result, err := svc.Evaluate(ctx, "geo-feature", flags.EvalContext{
 		Attrs: map[string]any{"plan": "premium", "country": "US"},
@@ -251,7 +259,7 @@ func TestService_Evaluate_RuleMatch_FirstMatchWins(t *testing.T) {
 	svc := flags.NewService(repo)
 	ctx := context.Background()
 
-	flag := &flags.Flag{
+	flag := flags.Flag{
 		Key:          "tiered-feature",
 		Type:         flags.FlagString,
 		Enabled:      true,
@@ -273,7 +281,8 @@ func TestService_Evaluate_RuleMatch_FirstMatchWins(t *testing.T) {
 			},
 		},
 	}
-	require.NoError(t, svc.Create(ctx, flag))
+	_, err := svc.Create(ctx, flag)
+	require.NoError(t, err)
 
 	result, err := svc.Evaluate(ctx, "tiered-feature", flags.EvalContext{
 		Attrs: map[string]any{"plan": "enterprise"},
@@ -291,7 +300,7 @@ func TestService_Evaluate_RuleMatch_StartsWith(t *testing.T) {
 	svc := flags.NewService(repo)
 	ctx := context.Background()
 
-	flag := &flags.Flag{
+	flag := flags.Flag{
 		Key:          "internal-feature",
 		Type:         flags.FlagBool,
 		Enabled:      true,
@@ -306,7 +315,8 @@ func TestService_Evaluate_RuleMatch_StartsWith(t *testing.T) {
 			},
 		},
 	}
-	require.NoError(t, svc.Create(ctx, flag))
+	_, err := svc.Create(ctx, flag)
+	require.NoError(t, err)
 
 	result, err := svc.Evaluate(ctx, "internal-feature", flags.EvalContext{
 		Attrs: map[string]any{"email": "admin@company.com"},
@@ -328,7 +338,7 @@ func TestService_Evaluate_StringValue(t *testing.T) {
 	svc := flags.NewService(repo)
 	ctx := context.Background()
 
-	flag := &flags.Flag{
+	flag := flags.Flag{
 		Key:          "welcome-message",
 		Type:         flags.FlagString,
 		Enabled:      true,
@@ -343,7 +353,8 @@ func TestService_Evaluate_StringValue(t *testing.T) {
 			},
 		},
 	}
-	require.NoError(t, svc.Create(ctx, flag))
+	_, err := svc.Create(ctx, flag)
+	require.NoError(t, err)
 
 	result, err := svc.Evaluate(ctx, "welcome-message", flags.EvalContext{
 		Attrs: map[string]any{"tier": "vip"},
@@ -374,13 +385,14 @@ func TestService_WithCustomMatcher(t *testing.T) {
 	svc := flags.NewServiceWithMatcher(repo, customMatcher)
 	ctx := context.Background()
 
-	flag := &flags.Flag{
+	flag := flags.Flag{
 		Key:          "test-flag",
 		Type:         flags.FlagString,
 		Enabled:      true,
 		DefaultValue: flags.StringValue("default"),
 	}
-	require.NoError(t, svc.Create(ctx, flag))
+	_, err := svc.Create(ctx, flag)
+	require.NoError(t, err)
 
 	result, err := svc.Evaluate(ctx, "test-flag", flags.EvalContext{})
 	require.NoError(t, err)
@@ -397,7 +409,7 @@ func TestService_Evaluate_NumberValue(t *testing.T) {
 	svc := flags.NewService(repo)
 	ctx := context.Background()
 
-	flag := &flags.Flag{
+	flag := flags.Flag{
 		Key:          "rate-limit",
 		Type:         flags.FlagNumber,
 		Enabled:      true,
@@ -419,7 +431,8 @@ func TestService_Evaluate_NumberValue(t *testing.T) {
 			},
 		},
 	}
-	require.NoError(t, svc.Create(ctx, flag))
+	_, err := svc.Create(ctx, flag)
+	require.NoError(t, err)
 
 	result, err := svc.Evaluate(ctx, "rate-limit", flags.EvalContext{
 		Attrs: map[string]any{"plan": "enterprise"},

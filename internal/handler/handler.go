@@ -11,8 +11,8 @@ import (
 //go:generate mockgen -destination=mock_service_test.go -package=handler_test . FlagService
 
 type FlagService interface {
-	Create(ctx context.Context, flag *flags.Flag) error
-	Evaluate(ctx context.Context, key string, evalCtx flags.EvalContext) (*flags.EvalResult, error)
+	Create(ctx context.Context, flag flags.Flag) (flags.Flag, error)
+	Evaluate(ctx context.Context, key string, evalCtx flags.EvalContext) (flags.EvalResult, error)
 }
 
 type Handler struct {
@@ -24,9 +24,7 @@ func New(service FlagService) *Handler {
 }
 
 func (h *Handler) CreateFlag(ctx context.Context, req *CreateFlagRequest) (*CreateFlagResponse, error) {
-	flag := ToFlag(req.Body)
-
-	err := h.service.Create(ctx, flag)
+	flag, err := h.service.Create(ctx, ToFlag(req.Body))
 	if err != nil {
 		if errors.Is(err, flags.ErrFlagExists) {
 			return nil, huma.Error409Conflict("flag already exists")

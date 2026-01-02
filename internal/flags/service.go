@@ -21,19 +21,23 @@ func NewServiceWithMatcher(repo Repository, matcher RuleMatcher) *Service {
 	}
 }
 
-func (s *Service) Create(ctx context.Context, flag *Flag) error {
+func (s *Service) Create(ctx context.Context, flag Flag) (Flag, error) {
 	flag.UpdatedAt = time.Now()
 
-	return s.repo.Create(ctx, flag)
-}
-
-func (s *Service) Evaluate(ctx context.Context, key string, evalCtx EvalContext) (*EvalResult, error) {
-	flag, err := s.repo.Get(ctx, key)
-	if err != nil {
-		return nil, err
+	if err := s.repo.Create(ctx, &flag); err != nil {
+		return Flag{}, err
 	}
 
-	result := &EvalResult{
+	return flag, nil
+}
+
+func (s *Service) Evaluate(ctx context.Context, key string, evalCtx EvalContext) (EvalResult, error) {
+	flag, err := s.repo.Get(ctx, key)
+	if err != nil {
+		return EvalResult{}, err
+	}
+
+	result := EvalResult{
 		FlagKey:     key,
 		EvaluatedAt: time.Now(),
 	}
