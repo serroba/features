@@ -50,7 +50,6 @@ func (h *Handler) CreateFlag(ctx context.Context, req *CreateFlagRequest) (*Crea
 	return &CreateFlagResponse{
 		Body: CreateFlagResponseBody{
 			Key:       flag.Key,
-			Version:   flag.Version,
 			CreatedAt: flag.UpdatedAt,
 		},
 	}, nil

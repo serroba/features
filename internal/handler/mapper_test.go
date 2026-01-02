@@ -97,7 +97,6 @@ func TestToEvalResultBody(t *testing.T) {
 		},
 		Reason:      flags.ReasonRuleMatch,
 		RuleID:      "rule-1",
-		Version:     5,
 		EvaluatedAt: now,
 	}
 
@@ -108,7 +107,6 @@ func TestToEvalResultBody(t *testing.T) {
 	assert.True(t, *body.Value.Bool)
 	assert.Equal(t, "rule_match", body.Reason)
 	assert.Equal(t, "rule-1", body.RuleID)
-	assert.Equal(t, int64(5), body.Version)
 	assert.Equal(t, now, body.EvaluatedAt)
 }
 

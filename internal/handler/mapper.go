@@ -73,7 +73,6 @@ func ToEvalResultBody(result *flags.EvalResult) EvalResultBody {
 		Value:       toValueBody(result.Value),
 		Reason:      string(result.Reason),
 		RuleID:      result.RuleID,
-		Version:     result.Version,
 		EvaluatedAt: result.EvaluatedAt,
 	}
 }

@@ -26,7 +26,6 @@ func TestService_Create(t *testing.T) {
 	err := svc.Create(ctx, flag)
 	require.NoError(t, err)
 
-	assert.Equal(t, int64(1), flag.Version)
 	assert.False(t, flag.UpdatedAt.IsZero())
 }
 
