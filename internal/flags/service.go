@@ -11,10 +11,7 @@ type Service struct {
 }
 
 func NewService(repo Repository) *Service {
-	return &Service{
-		repo:        repo,
-		ruleMatcher: DefaultRuleMatcher(),
-	}
+	return NewServiceWithMatcher(repo, DefaultRuleMatcher())
 }
 
 func NewServiceWithMatcher(repo Repository, matcher RuleMatcher) *Service {
@@ -48,7 +45,7 @@ func (s *Service) Evaluate(ctx context.Context, key string, evalCtx EvalContext)
 		return result, nil
 	}
 
-	if rule := s.ruleMatcher(flag.Rules, evalCtx); rule != nil {
+	if rule, ok := s.ruleMatcher(flag.Rules, evalCtx); ok {
 		result.Value = rule.Value
 		result.Reason = ReasonRuleMatch
 		result.RuleID = rule.ID
