@@ -14,4 +14,3 @@ threshold:
 exclude:
   # Main entry points and DI wiring
   paths:
-    - ^internal/flags/types.go$
