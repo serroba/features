@@ -11,20 +11,20 @@ const (
 )
 
 type Flag struct {
-	Key          string    `json:"key"`
-	Type         FlagType  `json:"type"`
-	Enabled      bool      `json:"enabled"` // global kill switch
-	DefaultValue Value     `json:"default_value"`
-	Rules        []Rule    `json:"rules"` // ordered: first match wins
-	Version      int64     `json:"version"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	Key          string
+	Type         FlagType
+	Enabled      bool // global kill switch
+	DefaultValue Value
+	Rules        []Rule // ordered: first match wins
+	Version      int64
+	UpdatedAt    time.Time
 }
 
 type Rule struct {
-	ID         string      `json:"id"`
-	Conditions []Condition `json:"conditions"` // AND across conditions
-	Value      Value       `json:"value"`
-	Rollout    *Rollout    `json:"rollout,omitempty"` // optional percentage rollout gate
+	ID         string
+	Conditions []Condition // AND across conditions
+	Value      Value
+	Rollout    *Rollout // optional percentage rollout gate
 }
 
 type ConditionOp string
@@ -39,15 +39,15 @@ const (
 )
 
 type Condition struct {
-	Attr  string      `json:"attr"`  // e.g. "tenant_id", "user_id", "plan", "country"
-	Op    ConditionOp `json:"op"`    // eq/in/exists/...
-	Value any         `json:"value"` // string | float64 | bool | []any depending on Op
+	Attr  string      // e.g. "tenant_id", "user_id", "plan", "country"
+	Op    ConditionOp // eq/in/exists/...
+	Value any         // string | float64 | bool | []any depending on Op
 }
 
 type Rollout struct {
-	Percentage int    `json:"percentage"` // 0..100
-	Salt       string `json:"salt"`       // changes bucket assignment when rotated
-	Subject    string `json:"subject"`    // "user" or "tenant" (who gets bucketed)
+	Percentage int    // 0..100
+	Salt       string // changes bucket assignment when rotated
+	Subject    string // "user" or "tenant" (who gets bucketed)
 }
 
 type OverrideScope string
@@ -58,21 +58,21 @@ const (
 )
 
 type Override struct {
-	FlagKey   string        `json:"flag_key"`
-	Scope     OverrideScope `json:"scope"`
-	SubjectID string        `json:"subject_id"` // user_id or tenant_id
-	Value     Value         `json:"value"`
-	Reason    string        `json:"reason,omitempty"`
-	CreatedAt time.Time     `json:"created_at"`
-	CreatedBy string        `json:"created_by,omitempty"`
-	ExpiresAt *time.Time    `json:"expires_at,omitempty"` // optional safety valve
+	FlagKey   string
+	Scope     OverrideScope
+	SubjectID string // user_id or tenant_id
+	Value     Value
+	Reason    string
+	CreatedAt time.Time
+	CreatedBy string
+	ExpiresAt *time.Time // optional safety valve
 }
 
 type Value struct {
-	Kind   FlagType `json:"kind"`
-	Bool   *bool    `json:"bool,omitempty"`
-	String *string  `json:"string,omitempty"`
-	Number *float64 `json:"number,omitempty"`
+	Kind   FlagType
+	Bool   *bool
+	String *string
+	Number *float64
 }
 
 func BoolValue(v bool) Value {
@@ -88,9 +88,9 @@ func NumberValue(v float64) Value {
 }
 
 type EvalContext struct {
-	TenantID string         `json:"tenant_id"`
-	UserID   string         `json:"user_id"`
-	Attrs    map[string]any `json:"attrs,omitempty"` // arbitrary attributes for rule conditions
+	TenantID string
+	UserID   string
+	Attrs    map[string]any // arbitrary attributes for rule conditions
 }
 
 type EvalReason string
@@ -104,10 +104,10 @@ const (
 )
 
 type EvalResult struct {
-	FlagKey     string     `json:"flag_key"`
-	Value       Value      `json:"value"`
-	Reason      EvalReason `json:"reason"`
-	RuleID      string     `json:"rule_id,omitempty"`
-	Version     int64      `json:"version"`
-	EvaluatedAt time.Time  `json:"evaluated_at"`
+	FlagKey     string
+	Value       Value
+	Reason      EvalReason
+	RuleID      string
+	Version     int64
+	EvaluatedAt time.Time
 }
