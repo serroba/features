@@ -362,6 +362,35 @@ func TestService_Evaluate_StringValue(t *testing.T) {
 	assert.Equal(t, "Hello, user!", *result.Value.String)
 }
 
+func TestService_WithCustomMatcher(t *testing.T) {
+	t.Parallel()
+
+	repo := flags.NewMemoryRepository()
+	customMatcher := func(_ []flags.Rule, _ flags.EvalContext) *flags.Rule {
+		return &flags.Rule{
+			ID:    "custom-rule",
+			Value: flags.StringValue("custom-value"),
+		}
+	}
+	svc := flags.NewServiceWithMatcher(repo, customMatcher)
+	ctx := context.Background()
+
+	flag := &flags.Flag{
+		Key:          "test-flag",
+		Type:         flags.FlagString,
+		Enabled:      true,
+		DefaultValue: flags.StringValue("default"),
+	}
+	require.NoError(t, svc.Create(ctx, flag))
+
+	result, err := svc.Evaluate(ctx, "test-flag", flags.EvalContext{})
+	require.NoError(t, err)
+
+	assert.Equal(t, flags.ReasonRuleMatch, result.Reason)
+	assert.Equal(t, "custom-rule", result.RuleID)
+	assert.Equal(t, "custom-value", *result.Value.String)
+}
+
 func TestService_Evaluate_NumberValue(t *testing.T) {
 	t.Parallel()
 

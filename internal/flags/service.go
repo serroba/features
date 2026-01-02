@@ -17,6 +17,13 @@ func NewService(repo Repository) *Service {
 	}
 }
 
+func NewServiceWithMatcher(repo Repository, matcher RuleMatcher) *Service {
+	return &Service{
+		repo:        repo,
+		ruleMatcher: matcher,
+	}
+}
+
 func (s *Service) Create(ctx context.Context, flag *Flag) error {
 	flag.UpdatedAt = time.Now()
 
