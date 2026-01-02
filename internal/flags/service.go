@@ -6,11 +6,15 @@ import (
 )
 
 type Service struct {
-	repo Repository
+	repo        Repository
+	ruleMatcher RuleMatcher
 }
 
 func NewService(repo Repository) *Service {
-	return &Service{repo: repo}
+	return &Service{
+		repo:        repo,
+		ruleMatcher: DefaultRuleMatcher(),
+	}
 }
 
 func (s *Service) Create(ctx context.Context, flag *Flag) error {
@@ -23,7 +27,7 @@ func (s *Service) Create(ctx context.Context, flag *Flag) error {
 	return s.repo.Create(ctx, flag)
 }
 
-func (s *Service) Evaluate(ctx context.Context, key string, _ EvalContext) (*EvalResult, error) {
+func (s *Service) Evaluate(ctx context.Context, key string, evalCtx EvalContext) (*EvalResult, error) {
 	flag, err := s.repo.Get(ctx, key)
 	if err != nil {
 		return nil, err
@@ -38,6 +42,14 @@ func (s *Service) Evaluate(ctx context.Context, key string, _ EvalContext) (*Eva
 	if !flag.Enabled {
 		result.Value = flag.DefaultValue
 		result.Reason = ReasonDisabled
+
+		return result, nil
+	}
+
+	if rule := s.ruleMatcher(flag.Rules, evalCtx); rule != nil {
+		result.Value = rule.Value
+		result.Reason = ReasonRuleMatch
+		result.RuleID = rule.ID
 
 		return result, nil
 	}
