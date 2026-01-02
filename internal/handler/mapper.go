@@ -6,7 +6,7 @@ import (
 
 func ToFlag(body CreateFlagBody) flags.Flag {
 	return flags.Flag{
-		Key:          body.Key,
+		Key:          flags.FlagKey(body.Key),
 		Type:         flags.FlagType(body.Type),
 		Enabled:      body.Enabled,
 		DefaultValue: toValue(body.DefaultValue),

@@ -26,7 +26,7 @@ func TestService_Create(t *testing.T) {
 	created, err := svc.Create(ctx, input)
 	require.NoError(t, err)
 
-	assert.Equal(t, "new-feature", created.Key)
+	assert.Equal(t, flags.FlagKey("new-feature"), created.Key)
 	assert.False(t, created.UpdatedAt.IsZero())
 }
 
@@ -69,7 +69,7 @@ func TestService_Evaluate_ReturnsDefault(t *testing.T) {
 	result, err := svc.Evaluate(ctx, "my-flag", flags.EvalContext{})
 	require.NoError(t, err)
 
-	assert.Equal(t, "my-flag", result.FlagKey)
+	assert.Equal(t, flags.FlagKey("my-flag"), result.FlagKey)
 	assert.Equal(t, flags.ReasonDefault, result.Reason)
 	assert.Equal(t, flags.FlagBool, result.Value.Kind)
 	assert.True(t, *result.Value.Bool)

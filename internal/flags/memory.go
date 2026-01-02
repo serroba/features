@@ -7,16 +7,16 @@ import (
 
 type MemoryRepository struct {
 	mu    sync.RWMutex
-	flags map[string]Flag
+	flags map[FlagKey]Flag
 }
 
 func NewMemoryRepository() *MemoryRepository {
 	return &MemoryRepository{
-		flags: make(map[string]Flag),
+		flags: make(map[FlagKey]Flag),
 	}
 }
 
-func (r *MemoryRepository) Get(_ context.Context, key string) (Flag, error) {
+func (r *MemoryRepository) Get(_ context.Context, key FlagKey) (Flag, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 

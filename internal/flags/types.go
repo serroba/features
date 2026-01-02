@@ -2,6 +2,8 @@ package flags
 
 import "time"
 
+type FlagKey string
+
 type FlagType string
 
 const (
@@ -11,7 +13,7 @@ const (
 )
 
 type Flag struct {
-	Key          string
+	Key          FlagKey
 	Type         FlagType
 	Enabled      bool // global kill switch
 	DefaultValue Value
@@ -76,7 +78,7 @@ const (
 )
 
 type EvalResult struct {
-	FlagKey     string
+	FlagKey     FlagKey
 	Value       Value
 	Reason      EvalReason
 	RuleID      string

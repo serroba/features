@@ -37,7 +37,7 @@ func TestToFlag(t *testing.T) {
 
 	flag := handler.ToFlag(body)
 
-	assert.Equal(t, "test-flag", flag.Key)
+	assert.Equal(t, flags.FlagKey("test-flag"), flag.Key)
 	assert.Equal(t, flags.FlagBool, flag.Type)
 	assert.True(t, flag.Enabled)
 	assert.Equal(t, flags.FlagBool, flag.DefaultValue.Kind)
@@ -60,7 +60,7 @@ func TestToFlag_EmptyRules(t *testing.T) {
 
 	flag := handler.ToFlag(body)
 
-	assert.Equal(t, "simple-flag", flag.Key)
+	assert.Equal(t, flags.FlagKey("simple-flag"), flag.Key)
 	assert.Nil(t, flag.Rules)
 }
 
@@ -102,7 +102,7 @@ func TestToEvalResultBody(t *testing.T) {
 
 	body := handler.ToEvalResultBody(result)
 
-	assert.Equal(t, "my-flag", body.FlagKey)
+	assert.Equal(t, flags.FlagKey("my-flag"), body.FlagKey)
 	assert.Equal(t, "bool", body.Value.Kind)
 	assert.True(t, *body.Value.Bool)
 	assert.Equal(t, "rule_match", body.Reason)

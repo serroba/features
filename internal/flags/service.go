@@ -31,7 +31,7 @@ func (s *Service) Create(ctx context.Context, flag Flag) (Flag, error) {
 	return flag, nil
 }
 
-func (s *Service) Evaluate(ctx context.Context, key string, evalCtx EvalContext) (EvalResult, error) {
+func (s *Service) Evaluate(ctx context.Context, key FlagKey, evalCtx EvalContext) (EvalResult, error) {
 	flag, err := s.repo.Get(ctx, key)
 	if err != nil {
 		return EvalResult{}, err
